@@ -1,37 +1,37 @@
 import React, {Component} from 'react';
-import StoreContext from '../contexts/storeContext';
-import { loadBugs } from '../store/bugs';
+import { connect } from 'react-redux';
+import { getUnresolvedBugs, loadBugs, resolveBug } from '../store/bugs';
 
 class Bugs extends Component {
-    static contextType = StoreContext;
-    state={bugs:[]};
-
     componentDidMount() {
-        //subscribe to store
-        const store = this.context;
-        this.unsubscribe = store.subscribe(()=> {
-            const bugsInStore = store.getState().entities.bugs.list;
-            if (this.state.bugs !== bugsInStore) this.setState({ bugs: bugsInStore})
-        });
-        //dispatch(loadBugs)
-        store.dispatch(loadBugs());
-
-        //console.log(this.context);
-    }
-
-    componentWillUnmount() {
-        this.unsubscribe();
+        this.props.loadBugs();
     }
 
     render() {
         return (
             <ul>
-                {this.state.bugs.map((bug) => (
-                    <li key = {bug.id}>{bug.description}</li>
+                {this.props.bugs.map((bug) => (
+                    <li key = {bug.id}>
+                        {bug.description}
+                        <button onClick={() => this.props.resolveBug(bug.id)}>Resolve</button>
+                    </li>
                 ))}
             </ul>
         );
     }
 }
 
-export default Bugs;
+//bugs: state.entities.bugs.list
+const mapStateToProps = state => ({
+    bugs: getUnresolvedBugs(state),
+});
+
+const mapDispatchToProps = dispatch => ({
+    loadBugs: ()=> dispatch(loadBugs()),
+    resolveBug: id => dispatch(resolveBug(id)),
+});
+
+//Container 
+//Presentation (Bugs)
+
+export default connect(mapStateToProps, mapDispatchToProps)(Bugs)
